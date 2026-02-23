@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
-import { KokoroTTS } from "kokoro-js"; // The missing line causing the error
+import { KokoroTTS } from "kokoro-js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Initialize 88M (v1.0) with q4 for Render Free Tier memory safety
+// Initialize 88M (v1.0) with q4 for memory safety on Render Free
 const tts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
     device: "cpu",
     dtype: "q4" 
@@ -21,7 +21,7 @@ app.post("/v1/audio/speech", async (req, res) => {
 
         const result = await tts.generate(input, { voice });
         
-        // Handle different result structures in kokoro-js versions
+        // Handle result structure
         const audioBuffer = result.audio ? result.audio.buffer : result.buffer;
 
         if (!audioBuffer) throw new Error("Audio generation failed");
