@@ -4,28 +4,25 @@ import express from "express";
 const app = express();
 app.use(express.json());
 
-// Load the 88M (v1.0) model
+// CRITICAL: Use 'q8' or 'q4' for Render Free Tier (512MB)
+// This reduces the model's RAM footprint to ~80MB-100MB
 const tts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
-    device: "cpu" 
+    device: "cpu",
+    dtype: "q8" // Options: "q8", "q4", "fp16". Use "q8" for best balance.
 });
 
-// OpenAI-Compatible Endpoint
+app.get("/", (req, res) => res.send("Kokoro 88M (Quantized) is Online"));
+
 app.post("/v1/audio/speech", async (req, res) => {
     try {
-        const { input, voice = "af_heart", speed = 1.0 } = req.body;
-
-        if (!input) return res.status(400).json({ error: "Input text is required" });
-
-        console.log(`Generating: "${input.substring(0, 30)}..." with voice ${voice}`);
-        
-        const audio = await tts.generate(input, { voice, speed });
-        
-        res.set("Content-Type", "audio/mpeg"); // Standard audio type
+        const { input, voice = "af_heart" } = req.body;
+        // Optimization: Keep text short per request to avoid memory spikes
+        const audio = await tts.generate(input, { voice });
+        res.set("Content-Type", "audio/wav");
         res.send(Buffer.from(audio.buffer));
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 AI TTS Server ready on port ${PORT}`));
+app.listen(process.env.PORT || 3000);
