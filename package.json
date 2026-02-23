@@ -1,0 +1,11 @@
+{
+  "name": "kokoro-tts-server",
+  "type": "module",
+  "dependencies": {
+    "kokoro-js": "latest",
+    "express": "^4.18.2"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
